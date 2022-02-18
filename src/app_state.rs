@@ -91,6 +91,7 @@ impl FromStr for Encoding {
 pub enum Command {
     Show,
     Convert,
+    Oids,
 }
 
 #[derive(Clone, PartialEq, Eq)]

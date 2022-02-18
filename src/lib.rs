@@ -1,8 +1,8 @@
+use anyhow::Result;
+use log::trace;
+use pkcs8::der::Document;
 use std::path::Path;
 use std::str::FromStr;
-
-use anyhow::Result;
-use pkcs8::der::Document;
 
 use pkcs1::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
 use pkcs8::{DecodePrivateKey, EncryptedPrivateKeyDocument, PrivateKeyDocument, PublicKeyDocument};
@@ -121,10 +121,62 @@ pub fn discover(app_state: &mut AppState) -> Result<KeyInfo> {
 }
 
 fn convert_rsa_private(_app_state: &AppState, _key_info: &KeyInfo) -> Result<()> {
+    trace!("Converting RSA Private");
     Ok(())
 }
 fn convert_rsa_public(_app_state: &AppState, _key_info: &KeyInfo) -> Result<()> {
+    trace!("Converting RSA Private");
     Ok(())
+}
+
+// Make sure the type of key provided can be converted to the type of key
+// requested
+fn compare_key_type(ki_type: Option<KeyType>, as_type: KeyType) -> Result<bool> {
+    let ki_type = ki_type.ok_or_else(|| {
+        trace!("No KeyType for KeyInfo");
+        Error::KeyTypeError
+    })?;
+
+    if ki_type == KeyType::Public && as_type != KeyType::Public {
+        println!("Cannot convert from public key to private key");
+        return Err(Error::TypeMismatch.into());
+    }
+
+    Ok(true)
+}
+
+fn compare_algs(ki_alg: Option<Alg>, as_alg: Alg) -> Result<bool> {
+    let ki_alg = ki_alg.ok_or_else(|| {
+        trace!("No Alg for KeyInfo");
+        Error::AlgError
+    })?;
+
+    match (ki_alg, as_alg) {
+        (Alg::Rsa | Alg::RsaSsaPss, Alg::Rsa | Alg::RsaSsaPss) => Ok(true),
+        (Alg::Ecdsa, Alg::Ecdsa) => Ok(true),
+        _ => Ok(false)
+    }
+}
+
+fn safe_to_convert<'a>(
+    app_state: &'a AppState,
+    key_info: &'a KeyInfo,
+) -> Result<(&'a AppState, &'a KeyInfo)> {
+    let kt = key_info.key_type().as_ref();
+    let key_type = compare_key_type(kt, app_state.out_params.key_type)?;
+
+    Ok((app_state, key_info))
+}
+
+fn do_conversion<'a>(params: (&AppState, &KeyInfo)) -> Result<()> {
+    let app_state = params.0;
+    let key_info = params.1;
+    match (app_state.alg, app_state.in_params.key_type) {
+        (Alg::Rsa | Alg::RsaSsaPss, KeyType::Private) => convert_rsa_private(app_state, key_info),
+        (Alg::Rsa, KeyType::Public) => convert_rsa_public(app_state, key_info),
+
+        _ => Err(Error::NotSupported.into()),
+    }
 }
 
 /// Consume the AppState to convert the input file.
@@ -134,11 +186,7 @@ fn convert_rsa_public(_app_state: &AppState, _key_info: &KeyInfo) -> Result<()> 
 /// Note:  Only RSA Private keys are supported.  Elliptic Curve and Public keys
 /// are on the way.
 pub fn convert(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
-    match (app_state.alg, app_state.in_params.key_type) {
-        (Alg::Rsa, KeyType::Private) => convert_rsa_private(app_state, key_info),
-        (Alg::Rsa, KeyType::Public) => convert_rsa_public(app_state, key_info),
-        _ => Err(Error::NotSupported.into()),
-    }
+    safe_to_convert(app_state, key_info).and_then(do_conversion)
 }
 
 pub fn show(_app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {

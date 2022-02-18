@@ -35,7 +35,9 @@ impl KeyInfo {
             bytes: None,
         }
     }
-
+    pub fn encoding(self) -> Option<Encoding> {
+        self.encoding
+    }
     pub fn set_encoding(&mut self, encoding: Encoding) -> &mut Self {
         self.encoding = Some(encoding);
         self
@@ -53,6 +55,9 @@ impl KeyInfo {
     pub fn with_format(mut self, format: Format) -> Self {
         self.set_format(format);
         self
+    }
+    pub fn key_type(self) -> Option<KeyType> {
+        self.key_type
     }
 
     pub fn set_key_type(&mut self, key_type: KeyType) -> &mut Self {

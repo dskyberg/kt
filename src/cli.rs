@@ -119,5 +119,8 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
     if matches.is_present("show") {
         app_state.command = Command::Show;
     }
+    else if matches.is_present("oids") {
+        app_state.command = Command::Oids;
+    }
     Ok(app_state)
 }

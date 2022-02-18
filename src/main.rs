@@ -47,6 +47,13 @@ fn main() -> Result<()> {
                 .takes_value(false),
         )
         .arg(
+            Arg::new("oids")
+                .long("oids")
+                .help("Dump all the oids")
+                .required(false)
+                .takes_value(false),
+        )
+        .arg(
             Arg::new("in")
                 .long("in")
                 .value_name("FILE")
@@ -143,20 +150,38 @@ fn main() -> Result<()> {
                 .takes_value(true),
         )
         .get_matches();
+
     //let fake_args = vec!["kt", "--show" "-i",];
     //let args = app.get_matches_from(fake_args);
     //let args = generate_app().get_matches();
     let mut app_state = process(&args)?;
 
-    let key_info = discover(&mut app_state)?;
-
     match app_state.command {
         Command::Show => {
+            let key_info = discover(&mut app_state)?;
             let _key_id = show(&mut app_state, &key_info)?;
         }
         Command::Convert => {
+            let key_info = discover(&mut app_state)?;
             convert(&mut app_state, &key_info)?;
+        }
+        Command::Oids => {
+            dump_oids();
         }
     }
     Ok(())
+}
+
+fn dump_oid(oid: &[u8]) -> String {
+    format!("[u8;{}] = {:?}", oid.len(), oid)
+}
+
+fn dump_oids() {
+    use kt::oids;
+
+    println!("pub const RSA_ENCRYPTION_BYTES: {};", &dump_oid(oids::RSA_ENCRYPTION.as_bytes()));
+    println!("pub const RSASSA_PSS_BYTES: {};", &dump_oid(oids::RSASSA_PSS.as_bytes()));
+    println!("pub const ECDSA_BYTES: {};", &dump_oid(oids::ECDSA.as_bytes()));
+    println!("pub const PRIME_256_V1_BYTES: {};", &dump_oid(oids::PRIME_256_V1.as_bytes()));
+
 }
