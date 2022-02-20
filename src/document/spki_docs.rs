@@ -6,8 +6,8 @@ use spki::{
 
 use pkcs1::RsaPublicKeyDocument;
 
-use crate::app_state::{Alg, Encoding, Format, KeyType};
 use crate::key_info::KeyInfo;
+use crate::key_info::{Alg, Encoding, Format, KeyType};
 
 pub fn spki_public_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let spki = spki_doc.decode();

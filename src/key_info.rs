@@ -1,8 +1,120 @@
-use crate::app_state::{Alg, Encoding, Format, KeyType};
-use crate::oids::oid_to_str;
+use anyhow::Result;
+use std::fmt;
+use std::str::FromStr;
+
 use pkcs8::der::{Any, Decodable};
 use pkcs8::ObjectIdentifier;
-use std::fmt;
+
+use crate::errors::Error;
+use crate::oids::oid_to_str;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Alg {
+    Unknown,
+    Rsa,
+    RsaSsaPss,
+    Ecdsa,
+}
+
+impl Alg {
+    pub fn all() -> Vec<&'static str> {
+        vec!["RSA", "RSASSA_PSS", "ECDSA"]
+    }
+}
+
+impl FromStr for Alg {
+    type Err = anyhow::Error;
+    fn from_str(s: &str) -> Result<Alg> {
+        match s.to_uppercase().as_str() {
+            "RSA" => Ok(Alg::Rsa),
+            "RSASSA_PSS" => Ok(Alg::RsaSsaPss),
+            "ECDSA" => Ok(Alg::Ecdsa),
+            _ => Err(Error::AlgError.into()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KeyType {
+    Unknown,
+    Public,
+    Private,
+    KeyPair,
+}
+
+impl KeyType {
+    pub fn all() -> Vec<&'static str> {
+        vec!["PUBLIC", "PRIVATE", "KEYPAIR"]
+    }
+}
+
+impl FromStr for KeyType {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<KeyType> {
+        match s.to_uppercase().as_str() {
+            "PUBLIC" => Ok(KeyType::Public),
+            "PRIVATE" => Ok(KeyType::Private),
+            "KEYPAIR" => Ok(KeyType::KeyPair),
+            _ => Err(Error::KeyTypeError.into()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Format {
+    Unknown,
+    PKCS1,
+    PKCS8,
+    SPKI,
+    SEC1,
+}
+
+impl Format {
+    pub fn all() -> Vec<&'static str> {
+        vec!["PKCS1", "PKCS8", "SPKI", "SEC1"]
+    }
+}
+
+impl FromStr for Format {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Format> {
+        match s.to_uppercase().as_str() {
+            "PKCS8" => Ok(Format::PKCS8),
+            "PKCS1" => Ok(Format::PKCS1),
+            "SPKI" => Ok(Format::SPKI),
+            "SEC1" => Ok(Format::SEC1),
+            _ => Ok(Format::Unknown),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Encoding {
+    Unknown,
+    PEM,
+    DER,
+    JWK,
+}
+
+impl Encoding {
+    pub fn all() -> Vec<&'static str> {
+        vec!["PEM", "DER", "JWK"]
+    }
+}
+impl FromStr for Encoding {
+    type Err = anyhow::Error;
+
+    fn from_str(s: &str) -> Result<Encoding> {
+        match s.to_uppercase().as_str() {
+            "PEM" => Ok(Encoding::PEM),
+            "DER" => Ok(Encoding::DER),
+            "JWK" => Ok(Encoding::JWK),
+            _ => Err(Error::EncodingError.into()),
+        }
+    }
+}
 
 #[derive(Clone)]
 pub enum Parameter {
@@ -12,34 +124,34 @@ pub enum Parameter {
 
 #[derive(Clone)]
 pub struct KeyInfo {
-    encoding: Option<Encoding>,
-    format: Option<Format>,
-    key_type: Option<KeyType>,
-    key_length: Option<u32>,
-    alg: Option<Alg>,
-    oid: Option<ObjectIdentifier>,
-    params: Option<Vec<u8>>,
-    bytes: Option<Vec<u8>>,
+    pub encoding: Encoding,
+    pub format: Format,
+    pub key_type: KeyType,
+    pub key_length: Option<u32>,
+    pub alg: Alg,
+    pub oid: Option<ObjectIdentifier>,
+    pub params: Option<Vec<u8>>,
+    pub bytes: Option<Vec<u8>>,
 }
 
 impl KeyInfo {
     pub fn new() -> Self {
         Self {
-            encoding: None,
-            format: None,
-            key_type: None,
+            encoding: Encoding::Unknown,
+            format: Format::Unknown,
+            key_type: KeyType::Unknown,
             key_length: None,
-            alg: None,
+            alg: Alg::Unknown,
             oid: None,
             params: None,
             bytes: None,
         }
     }
-    pub fn encoding(self) -> Option<Encoding> {
-        self.encoding
+    pub fn encoding(self) -> Encoding {
+        self.encoding.clone()
     }
     pub fn set_encoding(&mut self, encoding: Encoding) -> &mut Self {
-        self.encoding = Some(encoding);
+        self.encoding = encoding;
         self
     }
     pub fn with_encoding(mut self, encoding: Encoding) -> Self {
@@ -47,8 +159,12 @@ impl KeyInfo {
         self
     }
 
+    pub fn format(self) -> Format {
+        self.format.clone()
+    }
+
     pub fn set_format(&mut self, format: Format) -> &mut Self {
-        self.format = Some(format);
+        self.format = format;
         self
     }
 
@@ -56,17 +172,23 @@ impl KeyInfo {
         self.set_format(format);
         self
     }
-    pub fn key_type(self) -> Option<KeyType> {
-        self.key_type
+
+    pub fn key_type(self) -> KeyType {
+        self.key_type.clone()
     }
 
     pub fn set_key_type(&mut self, key_type: KeyType) -> &mut Self {
-        self.key_type = Some(key_type);
+        self.key_type = key_type;
         self
     }
+
     pub fn with_key_type(mut self, key_type: KeyType) -> Self {
         self.set_key_type(key_type);
         self
+    }
+
+    pub fn key_length(self) -> Option<u32> {
+        self.key_length
     }
 
     pub fn set_key_length(&mut self, key_length: u32) -> &mut Self {
@@ -75,35 +197,60 @@ impl KeyInfo {
         }
         self
     }
+
     pub fn with_key_length(mut self, key_length: u32) -> Self {
         self.set_key_length(key_length);
         self
     }
+
+    pub fn alg(self) -> Alg {
+        self.alg.clone()
+    }
+
     pub fn set_alg(&mut self, alg: Alg) -> &mut Self {
-        self.alg = Some(alg);
+        self.alg = alg;
         self
     }
     pub fn with_alg(mut self, alg: Alg) -> Self {
         self.set_alg(alg);
         self
     }
+
+    pub fn bytes(self) -> Option<Vec<u8>> {
+        match self.bytes {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
+
     pub fn set_bytes(&mut self, bytes: &[u8]) -> &mut Self {
         self.bytes = Some(bytes.to_vec().clone());
         self
     }
+
     pub fn with_bytes(mut self, bytes: &[u8]) -> Self {
         self.set_bytes(bytes);
         self
     }
+
+    pub fn oid(self) -> Option<ObjectIdentifier> {
+        match self.oid {
+            Some(value) => Some(value.clone()),
+            None => None,
+        }
+    }
+
     // For PKCS8 and SPKI formats
     pub fn set_oid(&mut self, oid: &ObjectIdentifier) -> &mut Self {
         self.oid = Some(oid.clone());
         self
     }
+
     pub fn with_oid(mut self, oid: &ObjectIdentifier) -> Self {
         self.set_oid(oid);
         self
     }
+
     pub fn params(self) -> Option<Vec<u8>> {
         match self.params {
             Some(value) => Some(value.clone()),
@@ -143,22 +290,11 @@ impl fmt::Debug for KeyInfo {
 }
 impl fmt::Display for KeyInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let key_type = match self.key_type {
-            Some(key_type) => format!("Key Type: {:?}\n", key_type),
-            None => "".to_owned(),
-        };
-        let encoding = match self.encoding {
-            Some(encoding) => format!("Encoding: {:?}\n", encoding),
-            None => "".to_owned(),
-        };
-        let format = match self.format {
-            Some(format) => format!("Format: {:?}\n", format),
-            None => "".to_owned(),
-        };
-        let alg = match self.alg {
-            Some(alg) => format!("Algorithm: {:?}\n", alg),
-            None => "".to_owned(),
-        };
+        let key_type = format!("Key Type: {:?}\n", self.key_type);
+        let encoding = format!("Encoding: {:?}\n", self.encoding);
+        let format = format!("Format: {:?}\n", self.format);
+        let alg = format!("Algorithm: {:?}\n", self.alg);
+
         let key_length = match self.key_length {
             Some(key_length) => format!("Key Length: {:?}\n", key_length),
             None => "".to_owned(),

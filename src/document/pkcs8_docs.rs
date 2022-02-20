@@ -1,12 +1,19 @@
 use anyhow::Result;
-use pkcs8::der::{Document, Encodable};
 
+use log::trace;
 use pkcs1::RsaPrivateKeyDocument;
-use pkcs8::{EncryptedPrivateKeyDocument, PrivateKeyDocument};
+use pkcs8::{
+    der::{Document, Encodable},
+    EncodePrivateKey,
+    EncryptedPrivateKeyDocument,
+    LineEnding::CRLF,
+    PrivateKeyDocument, PrivateKeyInfo,
+};
 
-use crate::app_state::{Alg, AppState, Encoding, Format, KeyType};
+use crate::app_state::AppState;
 use crate::errors::Error;
-use crate::key_info::KeyInfo;
+use crate::key_info::{Alg, Encoding, Format, KeyInfo, KeyType};
+use crate::alg_id::rsa_encryption;
 
 pub fn pk8_private_key_info(pk8_doc: &PrivateKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let pk8 = pk8_doc.decode();
@@ -38,10 +45,31 @@ pub fn pk8_encrypted_private_key_info(
     enc_pk8_doc: &EncryptedPrivateKeyDocument,
     encoding: Encoding,
 ) -> Result<KeyInfo> {
-    let pwd = app_state.in_params.password.as_deref();
+    let pwd = app_state.in_password.as_deref();
     if pwd.is_none() {
         return Err(Error::MissingInput("password".to_owned()).into());
     }
     let pk8_doc = enc_pk8_doc.decrypt(pwd.unwrap())?;
     return pk8_private_key_info(&pk8_doc, encoding);
+}
+
+/// Turn a PKCS8 PrivateKeyInfo into a document
+pub fn pk8_private_key_document(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
+    let alg = rsa_encryption()?;
+    let bytes = key_info.bytes.clone().unwrap();
+    let pki = PrivateKeyInfo::new(alg, &bytes);
+    let pkd: PrivateKeyDocument = pki.try_into()?;
+    trace!("Created PKCS8 {:?}", &pkd);
+    match app_state.encoding {
+        Encoding::DER => {
+            let bytes = pkd.to_der();
+            app_state.write_stream(&bytes)?;
+        }
+        Encoding::PEM => {
+            let bytes = pkd.to_pkcs8_pem(CRLF)?;
+            app_state.write_stream(&bytes.as_bytes())?;
+        }
+        _ => {}
+    }
+    Ok(())
 }

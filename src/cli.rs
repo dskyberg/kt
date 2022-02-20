@@ -1,10 +1,13 @@
-use crate::app_state::*;
-use crate::errors::Error;
-use anyhow::{bail, Result};
-use clap::ArgMatches;
 use std::fs::File;
 use std::io::Read;
 use std::str::FromStr;
+
+use anyhow::{bail, Result};
+use clap::ArgMatches;
+
+use crate::app_state::*;
+use crate::errors::Error;
+use crate::key_info::{Alg, Encoding, Format, KeyType};
 
 /// Read a password from a local file
 ///
@@ -62,65 +65,70 @@ fn process_password(input: Option<&str>) -> Result<Option<String>> {
 pub fn process(matches: &ArgMatches) -> Result<AppState> {
     let mut app_state: AppState = Default::default();
 
+    // Process the top level inputs
+
     // Open the input reader.  Bail on error
-    if let Some(filename) = matches.value_of("in") {
-        app_state.in_params.file = Some(filename.to_string());
-        app_state.in_stream =
-            Box::new(std::fs::File::open(filename).map_err(|e| Error::ReadFileError(e))?);
-        //TODO IF no from arg is provided, see if we can determine from the filename.
-        if matches.value_of("from").is_none() {}
-    }
 
-    if let Some(encoding) = matches.value_of("from") {
-        app_state.in_params.encoding = Encoding::from_str(encoding)?;
-    }
+    match matches.subcommand() {
+        Some(("oids", _)) => {
+            app_state.mode = Mode::Oids;
+        }
+        Some(("show", matches)) => {
+            app_state.mode = Mode::Show;
+            if let Some(filename) = matches.value_of("in") {
+                app_state.in_file = Some(filename.to_string());
+                app_state.in_stream =
+                    Box::new(std::fs::File::open(filename).map_err(|e| Error::ReadFileError(e))?);
+                //TODO IF no from arg is provided, see if we can determine from the filename.
+                if matches.value_of("in").is_none() {}
+            }
+            app_state.in_password = process_password(matches.value_of("inpass"))?;
+        },
 
-    if let Some(format) = matches.value_of("informat") {
-        app_state.in_params.format = Format::from_str(format)?;
-    }
+        Some(("convert", matches)) => {
+            app_state.mode = Mode::Convert;
+            if let Some(filename) = matches.value_of("in") {
+                app_state.in_file = Some(filename.to_string());
+                app_state.in_stream =
+                    Box::new(std::fs::File::open(filename).map_err(|e| Error::ReadFileError(e))?);
+                //TODO IF no from arg is provided, see if we can determine from the filename.
+                if matches.value_of("in").is_none() {}
+            }
+        
+            app_state.in_password = process_password(matches.value_of("inpass"))?;
+        
+            // Open the output writer.  Bail on error
+            if let Some(filename) = matches.value_of("out") {
+                app_state.out_file = Some(filename.to_string());
+                app_state.out_stream =
+                    Box::new(std::fs::File::create(filename).map_err(|e| Error::ReadFileError(e))?);
+                //TODO IF no from arg is provided, see if we can determine from the filename.
+                if matches.value_of("to").is_none() {}
+            }
 
-    if let Some(keytype) = matches.value_of("inkeytype") {
-        app_state.in_params.key_type = KeyType::from_str(keytype)?;
-    }
+            app_state.out_password = process_password(matches.value_of("outpass"))?;
 
-    app_state.in_params.password = process_password(matches.value_of("inpass"))?;
+            if let Some(format) = matches.value_of("format") {
+                app_state.format = Some(Format::from_str(format)?);
+            }
 
-    // Open the output writer.  Bail on error
-    if let Some(filename) = matches.value_of("out") {
-        app_state.out_params.file = Some(filename.to_string());
-        app_state.out_stream =
-            Box::new(std::fs::File::create(filename).map_err(|e| Error::ReadFileError(e))?);
-        //TODO IF no from arg is provided, see if we can determine from the filename.
-        if matches.value_of("to").is_none() {}
-    }
+            if let Some(encoding) = matches.value_of("encoding") {
+                app_state.encoding = Encoding::from_str(encoding)?;
+            }
 
-    if let Some(encoding) = matches.value_of("to") {
-        app_state.out_params.encoding = Encoding::from_str(encoding)?;
-    }
+            if let Some(keytype) = matches.value_of("keytype") {
+                app_state.key_type = Some(KeyType::from_str(keytype)?);
+            }
 
-    if let Some(format) = matches.value_of("outformat") {
-        app_state.out_params.format = Format::from_str(format)?;
-    }
+            if let Some(alg) = matches.value_of("alg") {
+                app_state.alg = Some(Alg::from_str(alg)?);
+            }
 
-    if let Some(keytype) = matches.value_of("outkeytype") {
-        app_state.out_params.key_type = KeyType::from_str(keytype)?;
-    }
-
-    app_state.out_params.password = process_password(matches.value_of("outpass"))?;
-
-    if let Some(alg) = matches.value_of("alg") {
-        app_state.alg = Alg::from_str(alg)?;
-    }
-
-    if let Some(kid) = matches.value_of("kid") {
-        app_state.key_id = Some(kid.to_owned());
-    }
-
-    if matches.is_present("show") {
-        app_state.command = Command::Show;
-    }
-    else if matches.is_present("oids") {
-        app_state.command = Command::Oids;
-    }
+            if let Some(kid) = matches.value_of("kid") {
+                app_state.key_id = Some(kid.to_owned());
+            }
+        },
+        _ => {},
+    };
     Ok(app_state)
 }

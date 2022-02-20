@@ -2,8 +2,8 @@ use anyhow::Result;
 use sec1::der::Document;
 use sec1::EcPrivateKeyDocument;
 
-use crate::app_state::{Alg, Encoding, Format, KeyType};
 use crate::key_info::KeyInfo;
+use crate::key_info::{Alg, Encoding, Format, KeyType};
 
 pub fn sec1_private_key_info(
     sec1_doc: &EcPrivateKeyDocument,

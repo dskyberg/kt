@@ -3,8 +3,8 @@ use pkcs8::der::Document;
 
 use pkcs1::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
 
-use crate::app_state::{Alg, Encoding, Format, KeyType};
 use crate::key_info::KeyInfo;
+use crate::key_info::{Alg, Encoding, Format, KeyType};
 
 pub fn rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let pk1 = pk1_doc.decode();
