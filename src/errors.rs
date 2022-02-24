@@ -19,6 +19,12 @@ pub enum Error {
     #[error("Stream write error")]
     IOEWriteError(std::io::Error),
 
+    #[error("Bad PKCS8 file")]
+    BadPKCS8File(#[from] pkcs8::Error),
+
+    #[error("Bad PKCS8 DER")]
+    BadPKCS8DER(pkcs8::der::Error),
+
     /// Represents unknown file type error`.
     #[error("Uknown file type")]
     FileTypeError,
@@ -34,12 +40,6 @@ pub enum Error {
     /// Represents unknown file type error`.
     #[error("Uknown key type")]
     KeyTypeError,
-
-    #[error("Bad PKCS8 file")]
-    BadPKCS8File(#[from] pkcs8::Error),
-
-    #[error("Bad PKCS8 DER")]
-    BadPKCS8DER(pkcs8::der::Error),
 
     #[error("Input type mismatch")]
     TypeMismatch,
