@@ -8,7 +8,6 @@ use spki::{
 };
 use pkcs1::RsaPublicKeyDocument;
 
-use crate::errors::Error;
 use crate::alg_id::rsa_encryption;
 use crate::app_state::AppState;
 use crate::key_info::KeyInfo;
