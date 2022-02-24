@@ -2,7 +2,8 @@ use anyhow::Result;
 use log::{info, trace};
 
 use crate::app_state::AppState;
-use crate::document::pkcs8_docs::pk8_private_key_document;
+use crate::document::{pkcs8_docs::pk8_private_key_document,
+    spki_docs::spki_public_key_document};
 use crate::errors::Error;
 use crate::key_info::KeyInfo;
 use crate::key_info::{Alg, Format, KeyType};
@@ -15,8 +16,12 @@ fn convert_rsa_private(app_state: &mut AppState, key_info: &KeyInfo) -> Result<(
 
     Ok(())
 }
-fn convert_rsa_public(app_state: &mut AppState, _key_info: &KeyInfo) -> Result<()> {
+fn convert_rsa_public(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
     trace!("Converting RSA Public to {:?}", app_state.format);
+    if app_state.format.unwrap() == Format::SPKI {
+        spki_public_key_document(app_state, key_info)?;
+    }
+
     Ok(())
 }
 
