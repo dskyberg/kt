@@ -90,7 +90,8 @@ fn main() -> Result<()> {
                         .required(false)
                         .takes_value(true)
                         .possible_values(Encoding::all())
-                        .default_value("PEM"),
+                        .default_value("PEM")
+                        .ignore_case(true)
                 )
                 .arg(
                     Arg::new("kid")
@@ -107,7 +108,8 @@ fn main() -> Result<()> {
                         .help("Key algoritmm to output")
                         .required(false)
                         .takes_value(true)
-                        .possible_values(Alg::all()),
+                        .possible_values(Alg::all())
+                        .ignore_case(true)
                 )
                 .arg(
                     Arg::new("keytype")
@@ -117,7 +119,8 @@ fn main() -> Result<()> {
                         .required(false)
                         .takes_value(true)
                         .ignore_case(true)
-                        .possible_values(KeyType::all()),
+                        .possible_values(KeyType::all())
+                        .ignore_case(true)
                 )
                 .arg(
                     Arg::new("format")
@@ -128,6 +131,7 @@ fn main() -> Result<()> {
                         .required(false)
                         .takes_value(true)
                         .possible_values(Format::all())
+                        .ignore_case(true)
                 ),
         )
         .get_matches();
