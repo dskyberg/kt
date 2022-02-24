@@ -16,7 +16,7 @@ pub fn rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encoding) -> R
         .with_encoding(encoding)
         .with_key_length(key_length)
         .with_bytes(pk1_doc.as_der());
-    return Ok(key_info);
+    Ok(key_info)
 }
 pub fn rsa_public_key(pk1_doc: &RsaPublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let pk1 = pk1_doc.decode();
@@ -28,5 +28,5 @@ pub fn rsa_public_key(pk1_doc: &RsaPublicKeyDocument, encoding: Encoding) -> Res
         .with_encoding(encoding)
         .with_key_length(key_length)
         .with_bytes(pk1_doc.as_der());
-    return Ok(key_info);
+    Ok(key_info)
 }

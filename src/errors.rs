@@ -18,24 +18,7 @@ pub enum Error {
     /// Represents all other cases of `std::io::Error` when writing.
     #[error("Stream write error")]
     IOEWriteError(std::io::Error),
-    /*
-        #[error("JWK error")]
-        JWKError(josekit::JoseError),
 
-        #[error(transparent)]
-        JWEError(josekit::JoseError),
-
-        /// Represents a failure to parse a DER file
-        #[error("Bad DER file")]
-        BadDERFile(openssl::error::ErrorStack),
-
-        /// Represents a failure to parse a PEM file
-        #[error("Bad PEM file")]
-        BadPEMFile(openssl::error::ErrorStack),
-
-        #[error(transparent)]
-        Base64Error(#[from] base64::DecodeError),
-    */
     /// Represents unknown file type error`.
     #[error("Uknown file type")]
     FileTypeError,

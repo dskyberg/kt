@@ -18,8 +18,6 @@ pub fn spki_public_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) ->
         .with_oid(&spki.algorithm.oid)
         .with_bytes(spki_doc.as_der());
 
-    println!("AlgorithmID:       {:?}", &spki.algorithm);
-
     if let Some(params) = spki.algorithm.parameters {
         if let Ok(bytes) = params.to_vec() {
             key_info.set_params(&bytes);

@@ -84,7 +84,7 @@ impl AppState {
         let _cnt = self
             .in_stream
             .read_to_end(&mut bytes)
-            .map_err(|e| Error::IOEReadError(e));
+            .map_err(Error::IOEReadError);
         Ok(bytes)
     }
 
@@ -95,7 +95,7 @@ impl AppState {
         let _ = self
             .out_stream
             .write_all(bytes)
-            .map_err(|e| Error::IOEWriteError(e));
+            .map_err(Error::IOEWriteError);
         Ok(())
     }
 }

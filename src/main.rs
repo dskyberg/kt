@@ -17,9 +17,9 @@ use kt::{app_state::Mode, cli::process};
 
 fn main() -> Result<()> {
     // Grab info from Cargo.toml to show inhelp.
-    const NAME: &'static str = env!("CARGO_PKG_NAME");
-    const VERSION: &'static str = env!("CARGO_PKG_VERSION");
-    const DESC: &'static str = env!("CARGO_PKG_DESCRIPTION");
+    const NAME: &str = env!("CARGO_PKG_NAME");
+    const VERSION: &str = env!("CARGO_PKG_VERSION");
+    const DESC: &str = env!("CARGO_PKG_DESCRIPTION");
 
     env_logger::init();
 

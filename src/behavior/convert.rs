@@ -9,12 +9,9 @@ use crate::key_info::{Alg, Format, KeyType};
 
 fn convert_rsa_private(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
     trace!("Converting RSA Private to {:?}", app_state.format);
-    match app_state.format.unwrap() {
-        Format::PKCS8 => {
-            pk8_private_key_document(app_state, key_info)?;
-        }
-        _ => {}
-    };
+    if app_state.format.unwrap() == Format::PKCS8 {
+        pk8_private_key_document(app_state, key_info)?;
+    }
 
     Ok(())
 }
@@ -52,7 +49,7 @@ fn safe_to_convert<'a>(
     Ok((app_state, key_info))
 }
 
-fn _convert<'a>(params: (&mut AppState, &KeyInfo)) -> Result<()> {
+fn _convert(params: (&mut AppState, &KeyInfo)) -> Result<()> {
     let app_state = params.0;
     let key_info = params.1;
     match (key_info.alg, key_info.key_type) {

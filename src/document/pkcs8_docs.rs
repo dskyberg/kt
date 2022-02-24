@@ -50,7 +50,7 @@ pub fn pk8_encrypted_private_key_info(
         return Err(Error::MissingInput("password".to_owned()).into());
     }
     let pk8_doc = enc_pk8_doc.decrypt(pwd.unwrap())?;
-    return pk8_private_key_info(&pk8_doc, encoding);
+    pk8_private_key_info(&pk8_doc, encoding)
 }
 
 /// Turn a PKCS8 PrivateKeyInfo into a document
@@ -67,7 +67,7 @@ pub fn pk8_private_key_document(app_state: &mut AppState, key_info: &KeyInfo) ->
         }
         Encoding::PEM => {
             let bytes = pkd.to_pkcs8_pem(CRLF)?;
-            app_state.write_stream(&bytes.as_bytes())?;
+            app_state.write_stream(bytes.as_bytes())?;
         }
         _ => {}
     }

@@ -14,11 +14,11 @@ use crate::key_info::{Alg, Encoding, Format, KeyType};
 /// If the arg to `process_password` is `FILE:<filename>` this method is called
 /// to retrieve the password from `<filename>`.
 fn read_password_from_file(filename: &str) -> Result<Option<String>> {
-    let mut file = File::open(filename).map_err(|e| Error::ReadFileError(e))?;
+    let mut file = File::open(filename).map_err(Error::ReadFileError)?;
     let mut buf = String::new();
     let _cnt = file
         .read_to_string(&mut buf)
-        .map_err(|e| Error::IOEReadError(e));
+        .map_err( Error::IOEReadError);
 
     Ok(Some(buf))
 }
@@ -33,7 +33,7 @@ fn process_password(input: Option<&str>) -> Result<Option<String>> {
     match input {
         None => Ok(None),
         Some(s) => {
-            let parts = s.split(":").collect::<Vec<&str>>();
+            let parts = s.split(':').collect::<Vec<&str>>();
             // If there's not enough args, bail
             if parts.len() < 2 {
                 bail!(Error::BadPasswordArg);
@@ -78,7 +78,7 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
             if let Some(filename) = matches.value_of("in") {
                 app_state.in_file = Some(filename.to_string());
                 app_state.in_stream =
-                    Box::new(std::fs::File::open(filename).map_err(|e| Error::ReadFileError(e))?);
+                    Box::new(std::fs::File::open(filename).map_err(Error::ReadFileError)?);
                 //TODO IF no from arg is provided, see if we can determine from the filename.
                 if matches.value_of("in").is_none() {}
             }
@@ -90,7 +90,7 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
             if let Some(filename) = matches.value_of("in") {
                 app_state.in_file = Some(filename.to_string());
                 app_state.in_stream =
-                    Box::new(std::fs::File::open(filename).map_err(|e| Error::ReadFileError(e))?);
+                    Box::new(std::fs::File::open(filename).map_err( Error::ReadFileError)?);
                 //TODO IF no from arg is provided, see if we can determine from the filename.
                 if matches.value_of("in").is_none() {}
             }
@@ -101,7 +101,7 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
             if let Some(filename) = matches.value_of("out") {
                 app_state.out_file = Some(filename.to_string());
                 app_state.out_stream =
-                    Box::new(std::fs::File::create(filename).map_err(|e| Error::ReadFileError(e))?);
+                    Box::new(std::fs::File::create(filename).map_err(Error::ReadFileError)?);
                 //TODO IF no from arg is provided, see if we can determine from the filename.
                 if matches.value_of("to").is_none() {}
             }

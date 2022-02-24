@@ -148,7 +148,7 @@ impl KeyInfo {
         }
     }
     pub fn encoding(self) -> Encoding {
-        self.encoding.clone()
+        self.encoding
     }
     pub fn set_encoding(&mut self, encoding: Encoding) -> &mut Self {
         self.encoding = encoding;
@@ -160,7 +160,7 @@ impl KeyInfo {
     }
 
     pub fn format(self) -> Format {
-        self.format.clone()
+        self.format
     }
 
     pub fn set_format(&mut self, format: Format) -> &mut Self {
@@ -174,7 +174,7 @@ impl KeyInfo {
     }
 
     pub fn key_type(self) -> KeyType {
-        self.key_type.clone()
+        self.key_type
     }
 
     pub fn set_key_type(&mut self, key_type: KeyType) -> &mut Self {
@@ -204,7 +204,7 @@ impl KeyInfo {
     }
 
     pub fn alg(self) -> Alg {
-        self.alg.clone()
+        self.alg
     }
 
     pub fn set_alg(&mut self, alg: Alg) -> &mut Self {
@@ -217,14 +217,11 @@ impl KeyInfo {
     }
 
     pub fn bytes(self) -> Option<Vec<u8>> {
-        match self.bytes {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
+        self.bytes
     }
 
     pub fn set_bytes(&mut self, bytes: &[u8]) -> &mut Self {
-        self.bytes = Some(bytes.to_vec().clone());
+        self.bytes = Some(bytes.to_vec());
         self
     }
 
@@ -234,15 +231,12 @@ impl KeyInfo {
     }
 
     pub fn oid(self) -> Option<ObjectIdentifier> {
-        match self.oid {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
+        self.oid
     }
 
     // For PKCS8 and SPKI formats
     pub fn set_oid(&mut self, oid: &ObjectIdentifier) -> &mut Self {
-        self.oid = Some(oid.clone());
+        self.oid = Some(*oid);
         self
     }
 
@@ -252,13 +246,10 @@ impl KeyInfo {
     }
 
     pub fn params(self) -> Option<Vec<u8>> {
-        match self.params {
-            Some(value) => Some(value.clone()),
-            None => None,
-        }
+        self.params
     }
     pub fn set_params(&mut self, params: &[u8]) -> &mut Self {
-        self.params = Some(params.to_vec().clone());
+        self.params = Some(params.to_vec());
         self
     }
     pub fn with_params(mut self, params: &[u8]) -> Self {
@@ -267,14 +258,11 @@ impl KeyInfo {
     }
 }
 
-/*
-encoding: None,
-format: None,
-key_type: None,
-key_length: None,
-alg: None,
-bytes: None
-*/
+impl Default for KeyInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl fmt::Debug for KeyInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -323,12 +311,12 @@ fn alg_id_to_str(oid: Option<ObjectIdentifier>, params: Option<&Vec<u8>>) -> Str
 fn option_any_to_str(opt: Option<&Vec<u8>>) -> String {
     let no_val = "".to_owned();
     if let Some(bytes) = opt {
-        if let Ok(any) = Any::from_der(&bytes) {
+        if let Ok(any) = Any::from_der(bytes) {
             if let Ok(oid) = any.oid() {
                 return format!("\n\tParameters: OID {}\n", oid_to_str(&oid));
             }
         } else {
-            return format!("\n\tParameters: Unknown\n");
+            return "\n\tParameters: Unknown\n".to_string();
         }
     }
     no_val
