@@ -12,7 +12,7 @@ use crate::document::{
     pkcs1_docs::{rsa_private_key, rsa_public_key},
     pkcs8_docs::{pk8_encrypted_private_key_info, pk8_private_key_info},
     sec1_docs::sec1_private_key_info,
-    spki_docs::spki_public_key_info,
+    spki_docs::spki_to_key_info,
 };
 use crate::errors::Error;
 use crate::key_info::KeyInfo;
@@ -65,7 +65,7 @@ fn discover_public_key(key_bytes: &[u8]) -> Result<KeyInfo> {
     // Test for PEM encoding
     if let Ok(pem) = std::str::from_utf8(key_bytes) {
         if let Ok(spki_doc) = PublicKeyDocument::from_pem(pem) {
-            return spki_public_key_info(&spki_doc, Encoding::PEM);
+            return spki_to_key_info(&spki_doc, Encoding::PEM);
         }
 
         if let Ok(pk1_doc) = RsaPublicKeyDocument::from_pem(pem) {
@@ -74,7 +74,7 @@ fn discover_public_key(key_bytes: &[u8]) -> Result<KeyInfo> {
     }
 
     if let Ok(spki_doc) = PublicKeyDocument::from_der(key_bytes) {
-        return spki_public_key_info(&spki_doc, Encoding::DER);
+        return spki_to_key_info(&spki_doc, Encoding::DER);
     }
 
     if let Ok(pk1_doc) = RsaPublicKeyDocument::from_der(key_bytes) {

@@ -3,7 +3,7 @@ use log::{info, trace};
 
 use crate::app_state::AppState;
 use crate::document::{pkcs8_docs::pk8_private_key_document,
-    spki_docs::spki_public_key_document};
+    spki_docs::key_info_to_spki};
 use crate::errors::Error;
 use crate::key_info::KeyInfo;
 use crate::key_info::{Alg, Format, KeyType};
@@ -19,7 +19,7 @@ fn convert_rsa_private(app_state: &mut AppState, key_info: &KeyInfo) -> Result<(
 fn convert_rsa_public(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
     trace!("Converting RSA Public to {:?}", app_state.format);
     if app_state.format.unwrap() == Format::SPKI {
-        spki_public_key_document(app_state, key_info)?;
+        key_info_to_spki(app_state, key_info)?;
     }
 
     Ok(())
@@ -59,7 +59,7 @@ fn _convert(params: (&mut AppState, &KeyInfo)) -> Result<()> {
     let key_info = params.1;
     match (key_info.alg, key_info.key_type) {
         (Alg::Rsa | Alg::RsaSsaPss, KeyType::Private) => convert_rsa_private(app_state, key_info),
-        (Alg::Rsa, KeyType::Public) => convert_rsa_public(app_state, key_info),
+        (Alg::Rsa | Alg::RsaSsaPss, KeyType::Public) => convert_rsa_public(app_state, key_info),
 
         (a, b) => {
             println!("{:?} - {:?}", &a, &b);
