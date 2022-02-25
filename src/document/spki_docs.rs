@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use log::trace;
 
 use pkcs8::{SubjectPublicKeyInfo, LineEnding::CRLF};
@@ -8,12 +8,13 @@ use spki::{
 };
 use pkcs1::RsaPublicKeyDocument;
 
-use crate::alg_id::rsa_encryption;
+use crate::alg_id::{rsa_encryption, rsapss_encryption};
 use crate::app_state::AppState;
+use crate::errors::Error;
 use crate::key_info::KeyInfo;
 use crate::key_info::{Alg, Encoding, Format, KeyType};
 
-pub fn spki_public_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
+pub fn spki_to_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let spki = spki_doc.decode();
     let mut key_info = KeyInfo::new()
         .with_key_type(KeyType::Public)
@@ -41,8 +42,16 @@ pub fn spki_public_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) ->
 
 // pub fn spki_public_key_document(spki: &SubjectPublicKeyInfo)
 /// Turn a PKCS8 PrivateKeyInfo into a document
-pub fn spki_public_key_document(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
-    let alg = rsa_encryption()?;
+pub fn key_info_to_spki(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
+    let alg = match app_state.alg {
+        Some(Alg::Rsa) => rsa_encryption()?,
+        Some(Alg::RsaSsaPss) => rsapss_encryption()?,
+        _ => {
+            trace!("Unexpected algorithm: {:?}", app_state.alg);
+            bail!(Error::AlgError);
+        }
+    };
+
     let bytes = key_info.bytes.clone().unwrap();
 
     let spki = SubjectPublicKeyInfo{
