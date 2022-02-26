@@ -30,7 +30,6 @@ pub fn pk8_to_private_key_info(
         let pk1 = pk1_doc.decode();
         let key_length = u32::from(pk1.private_exponent.len()) * 8;
         key_info.set_key_length(key_length);
-        key_info.set_alg(Alg::Rsa);
     }
 
     Ok(key_info)

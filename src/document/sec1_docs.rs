@@ -9,6 +9,7 @@ pub fn sec1_private_key_info(
     sec1_doc: &EcPrivateKeyDocument,
     encoding: Encoding,
 ) -> Result<KeyInfo> {
+    println!("Doing SECG");
     let sec1 = sec1_doc.decode();
 
     let mut key_info = KeyInfo::new()

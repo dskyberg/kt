@@ -1,4 +1,5 @@
 use anyhow::Result;
+use core::convert::TryFrom;
 use std::fmt;
 use std::str::FromStr;
 
@@ -7,6 +8,7 @@ use pkcs8::{AlgorithmIdentifier, ObjectIdentifier};
 
 use crate::alg_id::alg_params;
 use crate::errors::Error;
+use crate::oids;
 use crate::oids::oid_to_str;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -15,11 +17,47 @@ pub enum Alg {
     Rsa,
     RsaSsaPss,
     Ecdsa,
+    X25519,
+    X448,
+    EdDsa25519,
+    EdDsa448,
+    EdDsa25519Ph,
+    EdDsa448Ph,
 }
 
 impl Alg {
     pub fn all() -> Vec<&'static str> {
-        vec!["RSA", "RSASSA_PSS", "ECDSA"]
+        vec![
+            "RSA",
+            "RSASSA_PSS",
+            "ECDSA",
+            "X25519",
+            "X448",
+            "EDDSA448",
+            "ED_DSA448",
+            "EDDSA448PH",
+            "ED_DSA448_PH",
+            "EDDSA25519PH",
+            "ED_DSA25519_PH",
+        ]
+    }
+}
+
+impl TryFrom<&ObjectIdentifier> for Alg {
+    type Error = anyhow::Error;
+    fn try_from(oid: &ObjectIdentifier) -> Result<Alg> {
+        match *oid {
+            oids::RSA_ENCRYPTION => Ok(Self::Rsa),
+            oids::RSASSA_PSS => Ok(Self::Rsa),
+            oids::ECDSA => Ok(Self::Ecdsa),
+            oids::X25519 => Ok(Self::X25519),
+            oids::X448 => Ok(Self::X448),
+            oids::ED_DSA25519 => Ok(Self::EdDsa25519),
+            oids::ED_DSA448 => Ok(Self::EdDsa448),
+            oids::ED_DSA25519_PH => Ok(Self::EdDsa25519Ph),
+            oids::ED_DSA448_PH => Ok(Self::EdDsa448Ph),
+            _ => Err(Error::UnknownAlg.into()),
+        }
     }
 }
 
@@ -30,8 +68,33 @@ impl FromStr for Alg {
             "RSA" => Ok(Alg::Rsa),
             "RSASSA_PSS" => Ok(Alg::RsaSsaPss),
             "ECDSA" => Ok(Alg::Ecdsa),
+            "X25519" => Ok(Alg::X25519),
+            "X448" => Ok(Alg::X448),
+            "EDDSA448" | "ED_DSA448" => Ok(Alg::EdDsa448),
+            "EDDSA25519" | "ED_DSA25519" => Ok(Alg::EdDsa25519),
+            "EDDSA448PH" | "ED_DSA448_PH" => Ok(Alg::EdDsa448Ph),
+            "EDDSA25519PH" | "ED_DSA25519_PH" => Ok(Alg::EdDsa25519Ph),
             _ => Err(Error::UnknownAlg.into()),
         }
+    }
+}
+
+impl fmt::Display for Alg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let txt = match self {
+            Alg::Unknown => "Unknown",
+            Alg::Rsa => "rsaEncryption",
+            Alg::RsaSsaPss => "rsassaPss",
+            Alg::Ecdsa => "id-ecPublicKey",
+            Alg::X25519 => "id-X25519",
+            Alg::X448 => "id-X448",
+            Alg::EdDsa25519 => "id-EdDSA25519",
+            Alg::EdDsa448 => "id-EdDSA448",
+            Alg::EdDsa25519Ph => "id-EdDSA25519-ph",
+            Alg::EdDsa448Ph => "id-EdDSA448-ph",
+        };
+
+        write!(f, "{}", txt)
     }
 }
 
@@ -249,15 +312,22 @@ impl KeyInfo {
     pub fn params(self) -> Option<Vec<u8>> {
         self.params
     }
+
     pub fn set_params(&mut self, params: &[u8]) -> &mut Self {
         self.params = Some(params.to_vec());
         self
     }
+
     pub fn with_params(mut self, params: &[u8]) -> Self {
         self.set_params(params);
         self
     }
+
+    /// Converts an AlgorithmIdentifier into an Alg and parameters
     pub fn with_alg_id(mut self, alg_id: &AlgorithmIdentifier) -> Self {
+        if let Ok(alg) = Alg::try_from(&alg_id.oid) {
+            self.set_alg(alg);
+        }
         self.set_oid(&alg_id.oid);
         self.params = alg_params(alg_id);
         self
@@ -282,12 +352,13 @@ impl fmt::Debug for KeyInfo {
             .finish()
     }
 }
+
 impl fmt::Display for KeyInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let key_type = format!("Key Type: {:?}\n", self.key_type);
         let encoding = format!("Encoding: {:?}\n", self.encoding);
         let format = format!("Format: {:?}\n", self.format);
-        let alg = format!("Algorithm: {:?}\n", self.alg);
+        let alg = format!("Algorithm: {}\n", self.alg);
 
         let key_length = match self.key_length {
             Some(key_length) => format!("Key Length: {:?}\n", key_length),
