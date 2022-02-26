@@ -33,6 +33,7 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("in")
                         .long("in")
+                        .short('i')
                         .value_name("FILE")
                         .help("Sets the input file to use")
                         .required(false)
@@ -53,6 +54,7 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("in")
                         .long("in")
+                        .short('i')
                         .value_name("FILE")
                         .help("Sets the input file to use")
                         .required(false)
@@ -69,6 +71,7 @@ fn main() -> Result<()> {
                 .arg(
                     Arg::new("out")
                         .long("out")
+                        .short('o')
                         .value_name("FILE")
                         .help("Sets the output file to use")
                         .required(false)
