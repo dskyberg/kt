@@ -6,7 +6,7 @@ use pkcs1::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
 use crate::key_info::KeyInfo;
 use crate::key_info::{Alg, Encoding, Format, KeyType};
 
-pub fn rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
+pub fn pk1_to_rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let pk1 = pk1_doc.decode();
     let key_length = u32::from(pk1.private_exponent.len()) * 8;
     let key_info = KeyInfo::new()
@@ -18,7 +18,7 @@ pub fn rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encoding) -> R
         .with_bytes(pk1_doc.as_der());
     Ok(key_info)
 }
-pub fn rsa_public_key(pk1_doc: &RsaPublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
+pub fn pk1_to_rsa_public_key(pk1_doc: &RsaPublicKeyDocument, encoding: Encoding) -> Result<KeyInfo> {
     let pk1 = pk1_doc.decode();
     let key_length = u32::from(pk1.modulus.len()) * 8;
     let key_info = KeyInfo::new()
@@ -30,3 +30,5 @@ pub fn rsa_public_key(pk1_doc: &RsaPublicKeyDocument, encoding: Encoding) -> Res
         .with_bytes(pk1_doc.as_der());
     Ok(key_info)
 }
+
+

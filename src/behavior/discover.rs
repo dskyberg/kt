@@ -9,7 +9,7 @@ use sec1::{DecodeEcPrivateKey, EcPrivateKeyDocument};
 
 use crate::app_state::AppState;
 use crate::document::{
-    pkcs1_docs::{rsa_private_key, rsa_public_key},
+    pkcs1_docs::{pk1_to_rsa_private_key, pk1_to_rsa_public_key},
     pkcs8_docs::{pk8_encrypted_private_key_info, pk8_private_key_info},
     sec1_docs::sec1_private_key_info,
     spki_docs::spki_to_key_info,
@@ -34,7 +34,7 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
 
         // Test PKCS1
         if let Ok(pk1_doc) = RsaPrivateKeyDocument::from_pem(pem) {
-            return rsa_private_key(&pk1_doc, Encoding::PEM);
+            return pk1_to_rsa_private_key(&pk1_doc, Encoding::PEM);
         }
         if let Ok(sec1_doc) = EcPrivateKeyDocument::from_sec1_pem(pem) {
             return sec1_private_key_info(&sec1_doc, Encoding::PEM);
@@ -51,7 +51,7 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
     }
 
     if let Ok(pk1_doc) = RsaPrivateKeyDocument::from_der(key_bytes) {
-        return rsa_private_key(&pk1_doc, Encoding::DER);
+        return pk1_rsa_private_key(&pk1_doc, Encoding::DER);
     }
 
     if let Ok(sec1_doc) = EcPrivateKeyDocument::from_sec1_der(key_bytes) {
@@ -69,7 +69,7 @@ fn discover_public_key(key_bytes: &[u8]) -> Result<KeyInfo> {
         }
 
         if let Ok(pk1_doc) = RsaPublicKeyDocument::from_pem(pem) {
-            return rsa_public_key(&pk1_doc, Encoding::PEM);
+            return pk1_to_rsa_public_key(&pk1_doc, Encoding::PEM);
         }
     }
 
@@ -78,7 +78,7 @@ fn discover_public_key(key_bytes: &[u8]) -> Result<KeyInfo> {
     }
 
     if let Ok(pk1_doc) = RsaPublicKeyDocument::from_der(key_bytes) {
-        return rsa_public_key(&pk1_doc, Encoding::DER);
+        return pk1_to_rsa_public_key(&pk1_doc, Encoding::DER);
     }
 
     Err(Error::UnknownKeyType.into())
