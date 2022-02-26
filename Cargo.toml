@@ -17,6 +17,3 @@ pkcs8 = { version = "0.8.0", features = ["alloc", "pem", "std", "encryption"] }
 sec1 = { version = "0.2.1", features = ["alloc", "pem", "std"] }
 spki = { version = "0.5.4", features = ["alloc", "pem", "std"] }
 thiserror = "1.0.30"
-
-[profile.dev.package.num-bigint-dig]
-opt-level = 3
