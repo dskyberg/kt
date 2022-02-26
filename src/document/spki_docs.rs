@@ -1,12 +1,12 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use log::trace;
 
-use pkcs8::{SubjectPublicKeyInfo, LineEnding::CRLF};
+use pkcs1::RsaPublicKeyDocument;
+use pkcs8::{LineEnding::CRLF, SubjectPublicKeyInfo};
 use spki::{
-    der::{Document, Encodable},
+    der::Document,
     PublicKeyDocument,
 };
-use pkcs1::RsaPublicKeyDocument;
 
 use crate::alg_id::{rsa_encryption, rsapss_encryption};
 use crate::app_state::AppState;
@@ -20,15 +20,8 @@ pub fn spki_to_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) -> Res
         .with_key_type(KeyType::Public)
         .with_format(Format::SPKI)
         .with_encoding(encoding)
-        .with_oid(&spki.algorithm.oid)
-        //.with_bytes(spki_doc.as_der());
+        .with_alg_id(&spki.algorithm)
         .with_bytes(spki.subject_public_key);
-
-    if let Some(params) = spki.algorithm.parameters {
-        if let Ok(bytes) = params.to_vec() {
-            key_info.set_params(&bytes);
-        }
-    }
 
     if let Ok(pk1_doc) = RsaPublicKeyDocument::from_der(spki.subject_public_key) {
         let pk1 = pk1_doc.decode();
@@ -43,23 +36,23 @@ pub fn spki_to_key_info(spki_doc: &PublicKeyDocument, encoding: Encoding) -> Res
 // pub fn spki_public_key_document(spki: &SubjectPublicKeyInfo)
 /// Turn a PKCS8 PrivateKeyInfo into a document
 pub fn key_info_to_spki(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
-    let alg = match app_state.alg {
-        Some(Alg::Rsa) => rsa_encryption()?,
-        Some(Alg::RsaSsaPss) => rsapss_encryption()?,
+    let alg = match app_state.alg()? {
+        Alg::Rsa => rsa_encryption()?,
+        Alg::RsaSsaPss => rsapss_encryption()?,
         _ => {
             trace!("Unexpected algorithm: {:?}", app_state.alg);
-            bail!(Error::AlgError);
+            bail!(Error::UnknownAlg);
         }
     };
 
     let bytes = key_info.bytes.clone().unwrap();
 
-    let spki = SubjectPublicKeyInfo{
+    let spki = SubjectPublicKeyInfo {
         algorithm: alg,
-        subject_public_key: &bytes
+        subject_public_key: &bytes,
     };
     let pkd: PublicKeyDocument = spki.try_into()?;
-    trace!("Created SPKI {:?}", &pkd);
+
     match app_state.encoding {
         Encoding::DER => {
             let bytes = pkd.to_der();

@@ -98,4 +98,21 @@ impl AppState {
             .map_err(Error::IOEWriteError);
         Ok(())
     }
+
+    /// Return the alg or Error::MissingAlg
+    pub fn alg(&self) -> Result<Alg> {
+        self.alg.ok_or_else(||Error::MissingAlg.into())
+    }
+
+    /// Return the encoding or Error::MissingEncoding. For consistency. Since encoding
+    /// is not an Option, it will always return Ok.
+    pub fn encoding(self) -> Result<Encoding> {
+        Ok(self.encoding)
+    }
+
+    // Return the format or Error::MissingFormat
+    pub fn format(self) -> Result<Format> {
+        self.format.ok_or_else(||Error::MissingFormat.into())
+    }
+
 }

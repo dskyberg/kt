@@ -1,28 +1,45 @@
 use anyhow::Result;
-use log::{info, trace};
+use log::{info, debug, trace};
 
 use crate::app_state::AppState;
-use crate::document::{pkcs8_docs::pk8_private_key_document,
+use crate::document::{
+    pkcs1_docs::{rsa_private_key_to_pk1, rsa_public_key_to_pk1},
+    pkcs8_docs::private_key_info_to_pk8,
     spki_docs::key_info_to_spki};
 use crate::errors::Error;
 use crate::key_info::KeyInfo;
 use crate::key_info::{Alg, Format, KeyType};
 
 fn convert_rsa_private(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
-    trace!("Converting RSA Private to {:?}", app_state.format);
-    if app_state.format.unwrap() == Format::PKCS8 {
-        pk8_private_key_document(app_state, key_info)?;
+    let format = app_state.format.ok_or(Error::MissingFormat)?;
+    match format {
+        Format::PKCS1 => {
+            Ok(rsa_private_key_to_pk1(app_state, key_info)?)
+        },
+        Format::PKCS8 => {
+            Ok(private_key_info_to_pk8(app_state, key_info)?)
+        },
+        _ => {
+            trace!("Unsupported format: {:?}", format);
+            Err(Error::NotSupported.into())
+        }
     }
-
-    Ok(())
 }
-fn convert_rsa_public(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
-    trace!("Converting RSA Public to {:?}", app_state.format);
-    if app_state.format.unwrap() == Format::SPKI {
-        key_info_to_spki(app_state, key_info)?;
-    }
 
-    Ok(())
+fn convert_rsa_public(app_state: &mut AppState, key_info: &KeyInfo) -> Result<()> {
+    let format = app_state.format.ok_or(Error::MissingFormat)?;
+    match format {
+        Format::PKCS1 => {
+            Ok(rsa_public_key_to_pk1(app_state, key_info)?)
+        },
+        Format::PKCS8 | Format::SPKI => {
+            Ok(key_info_to_spki(app_state, key_info)?)
+        },
+        _ => {
+            trace!("Unsupported format: {:?}", format);
+            Err(Error::NotSupported.into())
+        }
+    }
 }
 
 // Make sure the type of key provided can be converted to the type of key
@@ -62,7 +79,7 @@ fn _convert(params: (&mut AppState, &KeyInfo)) -> Result<()> {
         (Alg::Rsa | Alg::RsaSsaPss, KeyType::Public) => convert_rsa_public(app_state, key_info),
 
         (a, b) => {
-            println!("{:?} - {:?}", &a, &b);
+            debug!("{:?} - {:?}", &a, &b);
             Err(Error::NotSupported.into())
         }
     }

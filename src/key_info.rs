@@ -3,8 +3,9 @@ use std::fmt;
 use std::str::FromStr;
 
 use pkcs8::der::{Any, Decodable};
-use pkcs8::ObjectIdentifier;
+use pkcs8::{AlgorithmIdentifier, ObjectIdentifier};
 
+use crate::alg_id::alg_params;
 use crate::errors::Error;
 use crate::oids::oid_to_str;
 
@@ -29,7 +30,7 @@ impl FromStr for Alg {
             "RSA" => Ok(Alg::Rsa),
             "RSASSA_PSS" => Ok(Alg::RsaSsaPss),
             "ECDSA" => Ok(Alg::Ecdsa),
-            _ => Err(Error::AlgError.into()),
+            _ => Err(Error::UnknownAlg.into()),
         }
     }
 }
@@ -56,7 +57,7 @@ impl FromStr for KeyType {
             "PUBLIC" => Ok(KeyType::Public),
             "PRIVATE" => Ok(KeyType::Private),
             "KEYPAIR" => Ok(KeyType::KeyPair),
-            _ => Err(Error::KeyTypeError.into()),
+            _ => Err(Error::UnknownKeyType.into()),
         }
     }
 }
@@ -111,7 +112,7 @@ impl FromStr for Encoding {
             "PEM" => Ok(Encoding::PEM),
             "DER" => Ok(Encoding::DER),
             "JWK" => Ok(Encoding::JWK),
-            _ => Err(Error::EncodingError.into()),
+            _ => Err(Error::UnknownEncoding.into()),
         }
     }
 }
@@ -254,6 +255,11 @@ impl KeyInfo {
     }
     pub fn with_params(mut self, params: &[u8]) -> Self {
         self.set_params(params);
+        self
+    }
+    pub fn with_alg_id(mut self, alg_id: &AlgorithmIdentifier) -> Self {
+        self.set_oid(&alg_id.oid);
+        self.params = alg_params(alg_id);
         self
     }
 }

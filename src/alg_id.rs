@@ -54,3 +54,12 @@ pub fn ec_encryption(curve: &'_ [u8]) -> Result<AlgorithmIdentifier<'_>> {
     };
     Ok(alg_id)
 }
+
+pub fn alg_params(alg_id: &AlgorithmIdentifier) -> Option<Vec<u8>> {
+    if let Some(params) = alg_id.parameters {
+        if let Ok(bytes) = params.to_vec() {
+            return Some(bytes);
+        }
+    }
+    None
+}

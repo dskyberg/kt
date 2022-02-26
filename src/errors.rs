@@ -25,21 +25,33 @@ pub enum Error {
     #[error("Bad PKCS8 DER")]
     BadPKCS8DER(pkcs8::der::Error),
 
-    /// Represents unknown file type error`.
-    #[error("Uknown file type")]
-    FileTypeError,
+    /// Represents a missing algorithm`.
+    #[error("No algorithm was provided")]
+    MissingAlg,
+    
+    /// Represents unknown or unsupported algorithm`.
+    #[error("Uknown or unsupported algorithm")]
+    UnknownAlg,
+    
+    /// Represents a missing file format`.
+    #[error("No format was provided")]
+    MissingFormat,
 
-    /// Represents unknown file type error`.
-    #[error("Uknown file type")]
-    EncodingError,
+    /// Represents unknown or unsupported file format`.
+    #[error("Uknown or unsupported format")]
+    UnknownFormat,
 
-    /// Represents unknown file type error`.
-    #[error("Uknown algorithm")]
-    AlgError,
+    /// Represents a missing encoding`.
+    #[error("No encoding was provided")]
+    MissingEncoding,
 
-    /// Represents unknown file type error`.
+    /// Represents unknown or unsupported encoding`.
+    #[error("Uknown or unsupported encoding")]
+    UnknownEncoding,
+
+    /// Represents unknown or unsupported key type`.
     #[error("Uknown key type")]
-    KeyTypeError,
+    UnknownKeyType,
 
     #[error("Input type mismatch")]
     TypeMismatch,
@@ -55,7 +67,4 @@ pub enum Error {
 
     #[error("Missing input: {0}")]
     MissingInput(String),
-
-    #[error("unknown key type")]
-    UnknownKeyType,
 }

@@ -10,7 +10,7 @@ use sec1::{DecodeEcPrivateKey, EcPrivateKeyDocument};
 use crate::app_state::AppState;
 use crate::document::{
     pkcs1_docs::{pk1_to_rsa_private_key, pk1_to_rsa_public_key},
-    pkcs8_docs::{pk8_encrypted_private_key_info, pk8_private_key_info},
+    pkcs8_docs::{pk8_encrypted_to_private_key_info, pk8_to_private_key_info},
     sec1_docs::sec1_private_key_info,
     spki_docs::spki_to_key_info,
 };
@@ -24,12 +24,12 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
     if let Ok(pem) = std::str::from_utf8(key_bytes) {
         // Test PKCS8
         if let Ok(pk8_doc) = PrivateKeyDocument::from_pkcs8_pem(pem) {
-            return pk8_private_key_info(&pk8_doc, Encoding::PEM);
+            return pk8_to_private_key_info(&pk8_doc, Encoding::PEM);
         }
 
         // Try encrypted
         if let Ok(enc_doc) = EncryptedPrivateKeyDocument::from_pem(pem) {
-            return pk8_encrypted_private_key_info(app_state, &enc_doc, Encoding::PEM);
+            return pk8_encrypted_to_private_key_info(app_state, &enc_doc, Encoding::PEM);
         }
 
         // Test PKCS1
@@ -43,15 +43,15 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
 
     // Test for PKCS8 DER
     if let Ok(pk8_doc) = PrivateKeyDocument::from_der(key_bytes) {
-        return pk8_private_key_info(&pk8_doc, Encoding::DER);
+        return pk8_to_private_key_info(&pk8_doc, Encoding::DER);
     }
 
     if let Ok(enc_doc) = EncryptedPrivateKeyDocument::from_der(key_bytes) {
-        return pk8_encrypted_private_key_info(app_state, &enc_doc, Encoding::DER);
+        return pk8_encrypted_to_private_key_info(app_state, &enc_doc, Encoding::DER);
     }
 
     if let Ok(pk1_doc) = RsaPrivateKeyDocument::from_der(key_bytes) {
-        return pk1_rsa_private_key(&pk1_doc, Encoding::DER);
+        return pk1_to_rsa_private_key(&pk1_doc, Encoding::DER);
     }
 
     if let Ok(sec1_doc) = EcPrivateKeyDocument::from_sec1_der(key_bytes) {
