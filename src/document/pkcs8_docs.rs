@@ -24,7 +24,7 @@ pub fn pk8_to_private_key_info(
         .with_format(Format::PKCS8)
         .with_encoding(encoding)
         .with_alg_id(&pk8.algorithm)
-        .with_bytes(pk8_doc.as_der());
+        .with_bytes(pk8.private_key);
 
     if let Ok(pk1_doc) = RsaPrivateKeyDocument::from_der(pk8.private_key) {
         let pk1 = pk1_doc.decode();

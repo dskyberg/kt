@@ -17,7 +17,7 @@ pub fn pk1_to_rsa_private_key(pk1_doc: &RsaPrivateKeyDocument, encoding: Encodin
         .with_key_type(KeyType::Private)
         .with_encoding(encoding)
         .with_key_length(key_length)
-        .with_bytes(pk1_doc.as_der());
+        .with_bytes(pk1.to_der()?.as_ref());
     Ok(key_info)
 }
 
