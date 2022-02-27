@@ -1,3 +1,8 @@
+//! Command Line Interface
+//! 
+//! Processes the command line args to create an [AppState] instance, and then runs the 
+//! requested sub command.
+//!  
 use std::fs::File;
 use std::io::Read;
 use std::str::FromStr;
@@ -8,6 +13,8 @@ use clap::ArgMatches;
 use crate::app_state::*;
 use crate::errors::Error;
 use crate::key_info::{Alg, Encoding, Format, KeyType};
+use crate::discover::discover;
+use crate::conversion::convert;
 
 /// Read a password from a local file
 ///
@@ -62,7 +69,7 @@ fn process_password(input: Option<&str>) -> Result<Option<String>> {
 }
 
 /// Processes all CLI arguments into an instance of AppState
-pub fn process(matches: &ArgMatches) -> Result<AppState> {
+pub fn process(matches: &ArgMatches) -> Result<()> {
     let mut app_state: AppState = Default::default();
 
     // Process the top level inputs
@@ -70,11 +77,8 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
     // Open the input reader.  Bail on error
 
     match matches.subcommand() {
-        Some(("oids", _)) => {
-            app_state.mode = Mode::Oids;
-        }
         Some(("show", matches)) => {
-            app_state.mode = Mode::Show;
+            app_state.command = Command::Show;
             if let Some(filename) = matches.value_of("in") {
                 app_state.in_file = Some(filename.to_string());
                 app_state.in_stream =
@@ -86,7 +90,7 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
         },
 
         Some(("convert", matches)) => {
-            app_state.mode = Mode::Convert;
+            app_state.command = Command::Convert;
             if let Some(filename) = matches.value_of("in") {
                 app_state.in_file = Some(filename.to_string());
                 app_state.in_stream =
@@ -103,7 +107,7 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
                 app_state.out_stream =
                     Box::new(std::fs::File::create(filename).map_err(Error::ReadFileError)?);
                 //TODO IF no from arg is provided, see if we can determine from the filename.
-                if matches.value_of("to").is_none() {}
+                if matches.value_of("out").is_none() {}
             }
 
             app_state.out_password = process_password(matches.value_of("outpass"))?;
@@ -130,5 +134,16 @@ pub fn process(matches: &ArgMatches) -> Result<AppState> {
         },
         _ => {},
     };
-    Ok(app_state)
+
+    match app_state.command {
+        Command::Show => {
+            let key_info = discover(&mut app_state)?;
+            println!("{:}", key_info);
+        }
+        Command::Convert => {
+            let key_info = discover(&mut app_state)?;
+            convert(&mut app_state, &key_info)?;
+        }
+    }
+    Ok(())
 }

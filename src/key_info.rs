@@ -353,6 +353,7 @@ impl fmt::Debug for KeyInfo {
     }
 }
 
+/// This method is the basis for the "show" command on the CLI.
 impl fmt::Display for KeyInfo {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let key_type = format!("Key Type: {:?}\n", self.key_type);

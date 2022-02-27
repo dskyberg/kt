@@ -11,7 +11,7 @@ use crate::app_state::AppState;
 use crate::document::{
     pkcs1_docs::{pk1_to_rsa_private_key, pk1_to_rsa_public_key},
     pkcs8_docs::{pk8_encrypted_to_private_key_info, pk8_to_private_key_info},
-    sec1_docs::sec1_private_key_info,
+    sec1_docs::sec1_to_private_key_info,
     spki_docs::spki_to_key_info,
 };
 use crate::errors::Error;
@@ -37,7 +37,7 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
             return pk1_to_rsa_private_key(&pk1_doc, Encoding::PEM);
         }
         if let Ok(sec1_doc) = EcPrivateKeyDocument::from_sec1_pem(pem) {
-            return sec1_private_key_info(&sec1_doc, Encoding::PEM);
+            return sec1_to_private_key_info(&sec1_doc, Encoding::PEM);
         }
     }
 
@@ -55,7 +55,7 @@ fn discover_private_key(app_state: &AppState, key_bytes: &[u8]) -> Result<KeyInf
     }
 
     if let Ok(sec1_doc) = EcPrivateKeyDocument::from_sec1_der(key_bytes) {
-        return sec1_private_key_info(&sec1_doc, Encoding::DER);
+        return sec1_to_private_key_info(&sec1_doc, Encoding::DER);
     }
 
     Err(Error::UnknownKeyType.into())

@@ -13,13 +13,11 @@ use crate::key_info::{Alg, Encoding, Format, KeyType};
 
 /// The behavior the app should perform.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Mode {
+pub enum Command {
     /// Display info about the provided key.  Does no conversion
     Show,
     /// Convert the provided key, based on the input parameters
     Convert,
-    /// Dump all the ObjectIdentifiers into Rust code format.
-    Oids,
 }
 
 /// Program state.
@@ -51,7 +49,7 @@ pub struct AppState {
     /// Automatically set if an output password is provided
     pub encrypted: bool,
     /// What behavior to perform.  Defaults to "CONVERT"
-    pub mode: Mode,
+    pub command: Command,
 }
 
 impl Default for AppState {
@@ -69,7 +67,7 @@ impl Default for AppState {
             out_password: None,
             out_stream: Box::new(std::io::stdout()),
             encrypted: false,
-            mode: Mode::Convert,
+            command: Command::Convert,
         }
     }
 }

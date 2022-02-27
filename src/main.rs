@@ -8,12 +8,11 @@
 //! ````bash
 //! > kt --help
 //! ````
-//! 
+//!
 use anyhow::Result;
 use clap::{Arg, *};
-use kt::behavior::{convert::convert, discover::discover, oids::oids, show::show};
+use kt::cli::process;
 use kt::key_info::{Alg, Encoding, Format, KeyType};
-use kt::{app_state::Mode, cli::process};
 
 fn main() -> Result<()> {
     // Grab info from Cargo.toml to show inhelp.
@@ -26,7 +25,6 @@ fn main() -> Result<()> {
     let args = Command::new(NAME)
         .version(VERSION)
         .about(DESC)
-        .subcommand(Command::new("oids").about("Display some ObjectIdentifiers for Rust dev"))
         .subcommand(
             Command::new("show")
                 .about("Display info about the provided key")
@@ -94,7 +92,7 @@ fn main() -> Result<()> {
                         .takes_value(true)
                         .possible_values(Encoding::all())
                         .default_value("PEM")
-                        .ignore_case(true)
+                        .ignore_case(true),
                 )
                 .arg(
                     Arg::new("kid")
@@ -112,7 +110,7 @@ fn main() -> Result<()> {
                         .required(false)
                         .takes_value(true)
                         .possible_values(Alg::all())
-                        .ignore_case(true)
+                        .ignore_case(true),
                 )
                 .arg(
                     Arg::new("keytype")
@@ -123,7 +121,7 @@ fn main() -> Result<()> {
                         .takes_value(true)
                         .ignore_case(true)
                         .possible_values(KeyType::all())
-                        .ignore_case(true)
+                        .ignore_case(true),
                 )
                 .arg(
                     Arg::new("format")
@@ -134,25 +132,10 @@ fn main() -> Result<()> {
                         .required(false)
                         .takes_value(true)
                         .possible_values(Format::all())
-                        .ignore_case(true)
+                        .ignore_case(true),
                 ),
         )
         .get_matches();
 
-    let mut app_state = process(&args)?;
-
-    match app_state.mode {
-        Mode::Show => {
-            let key_info = discover(&mut app_state)?;
-            let _key_id = show(&mut app_state, &key_info)?;
-        }
-        Mode::Convert => {
-            let key_info = discover(&mut app_state)?;
-            convert(&mut app_state, &key_info)?;
-        }
-        Mode::Oids => {
-            oids();
-        }
-    }
-    Ok(())
+    process(&args)
 }
