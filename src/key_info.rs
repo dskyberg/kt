@@ -1,3 +1,13 @@
+//! Key metadata struct and supporting methods.
+//! 
+//! The KeyInfo methods supports chained style construction:
+//! ```
+//! use crate::key_info::Alg;
+//! let alg = Alg::Rsa;
+//! let key_info = KeyInfo::new().with_alg(alg);
+//! println!("Key info\n{:}", key_info);
+//! ```
+//! 
 use anyhow::Result;
 use core::convert::TryFrom;
 use std::fmt;
@@ -5,12 +15,14 @@ use std::str::FromStr;
 
 use pkcs8::der::{Any, Decodable};
 use pkcs8::{AlgorithmIdentifier, ObjectIdentifier};
+use zeroize::Zeroizing;
 
 use crate::alg_id::alg_params;
 use crate::errors::Error;
 use crate::oids;
 use crate::oids::oid_to_str;
 
+/// Supported key algorithms
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Alg {
     Unknown,
@@ -98,6 +110,7 @@ impl fmt::Display for Alg {
     }
 }
 
+/// Supported key types, such as Private and Public
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum KeyType {
     Unknown,
@@ -125,6 +138,7 @@ impl FromStr for KeyType {
     }
 }
 
+/// Supported document formats, such as PKCS8
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Format {
     Unknown,
@@ -154,6 +168,7 @@ impl FromStr for Format {
     }
 }
 
+/// Supported file encodings, such as PEM and DER
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Encoding {
     Unknown,
@@ -180,22 +195,28 @@ impl FromStr for Encoding {
     }
 }
 
-#[derive(Clone)]
-pub enum Parameter {
-    OID(ObjectIdentifier),
-    IA5String(String),
-}
-
+/// Metadata associated with the input key
 #[derive(Clone)]
 pub struct KeyInfo {
+    /// File encoding type, such as PEM or DER
     pub encoding: Encoding,
+    /// Document format, such as PKCS8, PKCS1, SECG, etc.
     pub format: Format,
+    /// Public or private
     pub key_type: KeyType,
+    /// Length in bits - such as 2048
     pub key_length: Option<u32>,
+    /// Key algorithm.  Such as RSA or ECDSA
     pub alg: Alg,
+    /// For PKCS8, SPKI, the doc OID
     pub oid: Option<ObjectIdentifier>,
+    /// Potential parameters associated with AlgorithmIdentifiers, such as ECDSA curves.
     pub params: Option<Vec<u8>>,
-    pub bytes: Option<Vec<u8>>,
+    /// Actual key bytes from the input document
+    /// 
+    /// The inner key bytes from the formatted document. Not the entire doc.  
+    /// Although Zeroize is used (to zeroize on drop), security has not been verified!
+    pub bytes: Option<Zeroizing<Vec<u8>>>,
 }
 
 impl KeyInfo {
@@ -211,50 +232,42 @@ impl KeyInfo {
             bytes: None,
         }
     }
-    pub fn encoding(self) -> Encoding {
-        self.encoding
-    }
+
+    /// Mutable variant to set encoding
     pub fn set_encoding(&mut self, encoding: Encoding) -> &mut Self {
         self.encoding = encoding;
         self
     }
+    /// Chainable variant to set encoding
     pub fn with_encoding(mut self, encoding: Encoding) -> Self {
         self.set_encoding(encoding);
         self
     }
-
-    pub fn format(self) -> Format {
-        self.format
-    }
-
+    /// Mutable variant to set the format
     pub fn set_format(&mut self, format: Format) -> &mut Self {
         self.format = format;
         self
     }
 
+    /// Chainable variant to set the format
     pub fn with_format(mut self, format: Format) -> Self {
         self.set_format(format);
         self
     }
 
-    pub fn key_type(self) -> KeyType {
-        self.key_type
-    }
-
+    /// Mutable variant to set the key_type
     pub fn set_key_type(&mut self, key_type: KeyType) -> &mut Self {
         self.key_type = key_type;
         self
     }
 
+    /// Chainable variant to set the key_type
     pub fn with_key_type(mut self, key_type: KeyType) -> Self {
         self.set_key_type(key_type);
         self
     }
 
-    pub fn key_length(self) -> Option<u32> {
-        self.key_length
-    }
-
+    /// Mutable variant to set the key_length
     pub fn set_key_length(&mut self, key_length: u32) -> &mut Self {
         if key_length > 0 {
             self.key_length = Some(key_length);
@@ -262,68 +275,62 @@ impl KeyInfo {
         self
     }
 
+    /// Chainable variant to set the key_length
     pub fn with_key_length(mut self, key_length: u32) -> Self {
         self.set_key_length(key_length);
         self
     }
 
-    pub fn alg(self) -> Alg {
-        self.alg
-    }
-
+    /// Mutable variant to set the alg
     pub fn set_alg(&mut self, alg: Alg) -> &mut Self {
         self.alg = alg;
         self
     }
+
+    /// Chainable variant to set the alg
     pub fn with_alg(mut self, alg: Alg) -> Self {
         self.set_alg(alg);
         self
     }
 
-    pub fn bytes(self) -> Option<Vec<u8>> {
-        self.bytes
-    }
-
+    /// Mutable variant to set the key bytes
     pub fn set_bytes(&mut self, bytes: &[u8]) -> &mut Self {
-        self.bytes = Some(bytes.to_vec());
+        self.bytes = Some(Zeroizing::new(bytes.to_vec()));
         self
     }
 
+    /// Chainable variant to set the key bytes
     pub fn with_bytes(mut self, bytes: &[u8]) -> Self {
         self.set_bytes(bytes);
         self
     }
 
-    pub fn oid(self) -> Option<ObjectIdentifier> {
-        self.oid
-    }
-
-    // For PKCS8 and SPKI formats
+    // Mutable variant to set the oid from PKCS8 and SPKI formats
     pub fn set_oid(&mut self, oid: &ObjectIdentifier) -> &mut Self {
         self.oid = Some(*oid);
         self
     }
 
+    /// Chainable vaiant to set the oid
     pub fn with_oid(mut self, oid: &ObjectIdentifier) -> Self {
         self.set_oid(oid);
         self
     }
 
-    pub fn params(self) -> Option<Vec<u8>> {
-        self.params
-    }
-
+    /// Mutable variant to set the params from an AlgorithmIdentifier
     pub fn set_params(&mut self, params: &[u8]) -> &mut Self {
         self.params = Some(params.to_vec());
         self
     }
 
+    /// Chainable variant to set th params
     pub fn with_params(mut self, params: &[u8]) -> Self {
         self.set_params(params);
         self
     }
 
-    /// Converts an AlgorithmIdentifier into an Alg and parameters
+    /// Chainable variant to set the alg, oid, and params 
+    /// from an AlgorithmIdentifier
     pub fn with_alg_id(mut self, alg_id: &AlgorithmIdentifier) -> Self {
         if let Ok(alg) = Alg::try_from(&alg_id.oid) {
             self.set_alg(alg);

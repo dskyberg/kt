@@ -2,7 +2,7 @@
 //! 
 //! The requested conversion is represented by the command line args
 //! captured in [AppState]. The source key is represented in [KeyInfo], which
-//! is determined by the [discover](crate::behavior::discover) functionality.
+//! is determined by the [discover](crate::discover) functionality.
 use anyhow::Result;
 use log::{debug, info, trace};
 

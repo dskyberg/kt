@@ -31,9 +31,9 @@ pub struct AppState {
     pub in_password: Option<String>,
     /// Password, if the output file should be encrypted.
     pub out_password: Option<String>,
-    /// See [in_file]
+    /// Input stream to read from.  Either a file, or stdin.
     pub in_stream: Box<dyn Read>,
-    /// See [out_file]
+    /// Output stream to write to.  Either a file or stdout.
     pub out_stream: Box<dyn Write>,
     /// If the output is JWT, use this for the KID value
     pub key_id: Option<String>,
@@ -52,8 +52,8 @@ pub struct AppState {
     pub command: Command,
 }
 
-impl Default for AppState {
-    fn default() -> Self {
+impl AppState {
+    pub fn new() -> Self {
         Self {
             key_type: None,
             encoding: Encoding::PEM,
@@ -69,6 +69,12 @@ impl Default for AppState {
             encrypted: false,
             command: Command::Convert,
         }
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

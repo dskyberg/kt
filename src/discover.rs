@@ -1,5 +1,10 @@
+//! Parse the input key into a [KeyInfo] instance.
+//! 
+//! Everything you need to know about the input key.  Including:
+//! * [file format](crate::key_info::Format)
+//! * [encoding](crate::key_info::Encoding)
+//! * [Algorithm](crate::key_info::Alg)
 use anyhow::Result;
-//use log::{info, trace};
 use pkcs8::der::Document;
 
 use pkcs1::{RsaPrivateKeyDocument, RsaPublicKeyDocument};
@@ -84,6 +89,10 @@ fn discover_public_key(key_bytes: &[u8]) -> Result<KeyInfo> {
     Err(Error::UnknownKeyType.into())
 }
 
+/// Reads and the key from [AppState] input stream and generates a [KeyInfo].
+/// 
+/// The [AppState] must be mutable in order to read the stream. The [KeyInfo]
+/// contains the raw bits as well as all the meta data associated with the key.
 pub fn discover(app_state: &mut AppState) -> Result<KeyInfo> {
 
     let in_bytes = app_state.read_stream()?;

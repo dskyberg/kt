@@ -1,3 +1,5 @@
+//! Constants for common Object Identifiers
+//! 
 use pkcs8::ObjectIdentifier;
 
 pub const RSASSA_PSS: ObjectIdentifier = ObjectIdentifier::new("1.2.840.113549.1.1.10");
@@ -22,7 +24,7 @@ pub const ED_DSA448_BYTES: [u8;3] = [43, 101, 113];
 pub const ED_DSA25519_PH_BYTES: [u8;3] = [43, 101, 114];
 pub const ED_DSA448_PH_BYTES: [u8;3] = [43, 101, 115];
 
-
+/// Makes the OID look like an X.500 OID for pretty printing.
 pub fn oid_to_str(oid: &ObjectIdentifier) -> String {
     match *oid {
         RSA_ENCRYPTION => format!("rsaEncryption: {}", oid),
