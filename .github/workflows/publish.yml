@@ -14,7 +14,6 @@ jobs:
         name: [
             macos,
             windows,
-            linux
         ]
 
         include:
