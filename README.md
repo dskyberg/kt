@@ -34,19 +34,19 @@ specifying passwords args.  KT accepts openssl style password args.
 
 To open a password protected file:
 
-````bash
-> kt show -i protected_file.der --inpass 'pass:my password'
+````sh
+:> kt show -i protected_file.der --inpass 'pass:my password'
 ````
 
 To encrypt with a password:
-````bash
-> kt show -i unprotected_file.der --outpass 'pass:my password' -e pem
+````sh
+:> kt show -i unprotected_file.der --outpass 'pass:my password' -e pem
 ````
 
 To see the full list, run:
 
-````
-kt convert --help
+````sh
+:> kt convert --help
 ````
 
 # NOT PRODUCTION QUALITY
@@ -63,16 +63,16 @@ been verified.
 ## Show key metadata
 
 ````sh
-> kt show -i test_data/rsa-2048-private-pk8.der
+:> kt show -i test_data/rsa-2048-private-pk8.der
 ````
 
 ## Convert a key
 
 ````sh
-> kt convert -i test_data/rsa-2048-private-pk8.der -f pkcs1 -e pem
+:> kt convert -i test_data/rsa-2048-private-pk8.der -f pkcs1 -e pem
 ````
 ## Display help for convert
 
 ````sh
-> kt convert --help
+:> kt convert --help
 ````
