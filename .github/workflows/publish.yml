@@ -12,9 +12,9 @@ jobs:
     strategy:
       matrix:
         name: [
-            linux,
+            macos,
             windows,
-            macos
+            linux
         ]
 
         include:
