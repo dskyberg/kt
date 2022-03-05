@@ -73,3 +73,12 @@ pub fn private_key_info_to_pk8(app_state: &mut AppState, key_info: &KeyInfo) -> 
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn do_something() {
+        assert!(true);
+    }
+}
+

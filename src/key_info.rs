@@ -2,7 +2,7 @@
 //! 
 //! The KeyInfo methods supports chained style construction:
 //! ```
-//! use crate::key_info::Alg;
+//! use kt::key_info::{KeyInfo, Alg};
 //! let alg = Alg::Rsa;
 //! let key_info = KeyInfo::new().with_alg(alg);
 //! println!("Key info\n{:}", key_info);
