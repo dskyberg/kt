@@ -34,16 +34,14 @@ fn main() -> Result<()> {
                         .short('i')
                         .value_name("FILE")
                         .help("Sets the input file to use")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("inpass")
                         .long("inpass")
                         .value_name("PASSWORD")
                         .help("password for protected input")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 ),
         )
         .subcommand(
@@ -55,16 +53,14 @@ fn main() -> Result<()> {
                         .short('i')
                         .value_name("FILE")
                         .help("Sets the input file to use")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("inpass")
                         .long("inpass")
                         .value_name("PASSWORD")
                         .help("password for protected input")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("out")
@@ -72,16 +68,14 @@ fn main() -> Result<()> {
                         .short('o')
                         .value_name("FILE")
                         .help("Sets the output file to use")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("outpass")
                         .long("outpass")
                         .value_name("PASSWORD")
                         .help("Password protected ouput")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("encoding")
@@ -89,8 +83,7 @@ fn main() -> Result<()> {
                         .short('e')
                         .help("Type of output encoding")
                         .required(false)
-                        .takes_value(true)
-                        .possible_values(Encoding::all())
+                        .value_parser(clap::builder::PossibleValuesParser::new(Encoding::all()))
                         .default_value("PEM")
                         .ignore_case(true),
                 )
@@ -99,8 +92,7 @@ fn main() -> Result<()> {
                         .long("kid")
                         .short('k')
                         .help("Key ID for JWT")
-                        .required(false)
-                        .takes_value(true),
+                        .required(false),
                 )
                 .arg(
                     Arg::new("alg")
@@ -108,8 +100,7 @@ fn main() -> Result<()> {
                         .short('a')
                         .help("Key algoritmm to output")
                         .required(false)
-                        .takes_value(true)
-                        .possible_values(Alg::all())
+                        .value_parser(clap::builder::PossibleValuesParser::new(Alg::all()))
                         .ignore_case(true),
                 )
                 .arg(
@@ -118,9 +109,8 @@ fn main() -> Result<()> {
                         .short('t')
                         .help("Type of key being output")
                         .required(false)
-                        .takes_value(true)
                         .ignore_case(true)
-                        .possible_values(KeyType::all())
+                        .value_parser(clap::builder::PossibleValuesParser::new(KeyType::all()))
                         .ignore_case(true),
                 )
                 .arg(
@@ -130,8 +120,7 @@ fn main() -> Result<()> {
                         .value_name("FORMAT")
                         .help("Format of key being output")
                         .required(false)
-                        .takes_value(true)
-                        .possible_values(Format::all())
+                        .value_parser(clap::builder::PossibleValuesParser::new(Format::all()))
                         .ignore_case(true),
                 ),
         )
